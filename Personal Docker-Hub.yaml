@@ -11,6 +11,11 @@ services:
     ports:
       # Exposes the registry on port 5000 of your CasaOS device.
       - "5000:5000"
+    environment:
+      # This is the crucial part to fix the CORS error.
+      # It tells the registry to allow requests from the web UI's address.
+      # Make sure the IP and port match the address you use to access the UI.
+      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin=['http://192.168.0.100:9998']
     volumes:
       # Persists the registry data (your images) to a folder on your main storage.
       # This ensures your images are not lost if the container is recreated.
@@ -24,11 +29,11 @@ services:
   # This container provides a graphical interface to see the images in your registry.
   registry-ui:
     image: joxit/docker-registry-ui:latest
-    container_name: docker-hub-local
+    container_name: registry-ui
     restart: unless-stopped
     ports:
-      # Exposes the web UI on port 8081 of your CasaOS device.
-      - "8081:80"
+      # Exposes the web UI on port 9998 of your CasaOS device to match the error message.
+      - "9998:80"
     environment:
       # Tells the UI where to find the registry.
       # 'http://registry:5000' works because they are on the same Docker network.
