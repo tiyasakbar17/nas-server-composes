@@ -12,10 +12,18 @@ services:
       # Exposes the registry on port 5000 of your CasaOS device.
       - "5000:5000"
     environment:
+      # --- CORS Configuration ---
       # This is the crucial part to fix the CORS error.
-      # It tells the registry to allow requests from the web UI's address.
-      # Make sure the IP and port match the address you use to access the UI.
-      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin=['http://192.168.0.100:9998']
+      # It tells the registry to allow requests from any origin (*).
+      # For better security, you can replace '*' with your specific UI address,
+      # e.g., 'http://192.168.0.100:9998'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: ['*']
+      # Allows the necessary HTTP methods for the UI to function.
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: ['HEAD', 'GET', 'OPTIONS', 'DELETE']
+      # Allows the UI to send necessary headers.
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: ['Authorization', 'Accept']
+      # Allows credentials to be sent.
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: ['true']
     volumes:
       # Persists the registry data (your images) to a folder on your main storage.
       # This ensures your images are not lost if the container is recreated.
@@ -32,12 +40,14 @@ services:
     container_name: registry-ui
     restart: unless-stopped
     ports:
-      # Exposes the web UI on port 9998 of your CasaOS device to match the error message.
+      # Exposes the web UI on port 9998 of your CasaOS device.
       - "9998:80"
     environment:
       # Tells the UI where to find the registry.
       # 'http://registry:5000' works because they are on the same Docker network.
       - REGISTRY_URL=http://registry:5000
+      # Enables the delete button in the UI.
+      - DELETE_IMAGES=true
     depends_on:
       - registry
     networks:
