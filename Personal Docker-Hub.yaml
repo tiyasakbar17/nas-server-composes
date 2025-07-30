@@ -1,0 +1,44 @@
+# This Docker Compose file sets up a private Docker registry and a web UI to browse it.
+# Use this in the "Custom Install" -> "Import Docker Compose" section of CasaOS.
+
+services:
+  # The private Docker registry service
+  # This container stores the actual Docker images.
+  registry:
+    image: registry:2
+    container_name: local-registry
+    restart: unless-stopped
+    ports:
+      # Exposes the registry on port 5000 of your CasaOS device.
+      - "5000:5000"
+    volumes:
+      # Persists the registry data (your images) to a folder on your main storage.
+      # This ensures your images are not lost if the container is recreated.
+      - type: bind
+        source: /DATA/AppData/local-registry
+        target: /var/lib/registry
+    networks:
+      - registry-net
+
+  # The web UI for the registry
+  # This container provides a graphical interface to see the images in your registry.
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: docker-hub-local
+    restart: unless-stopped
+    ports:
+      # Exposes the web UI on port 8081 of your CasaOS device.
+      - "8081:80"
+    environment:
+      # Tells the UI where to find the registry.
+      # 'http://registry:5000' works because they are on the same Docker network.
+      - REGISTRY_URL=http://registry:5000
+    depends_on:
+      - registry
+    networks:
+      - registry-net
+
+# Defines the network that allows the two containers to communicate with each other.
+networks:
+  registry-net:
+    driver: bridge
